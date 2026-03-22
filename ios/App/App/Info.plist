@@ -61,7 +61,7 @@
 	<string>alert</string>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
-	<key>Permitted background task scheduler identifiers</key>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
 		<string>gr.auth.aristomate.notifications.fetch</string>
 	</array>

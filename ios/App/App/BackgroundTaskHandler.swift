@@ -9,19 +9,43 @@ class BackgroundTaskHandler {
     private let defaults = UserDefaults.standard
     
     func scheduleBackgroundFetch() {
-        let request = BGAppRefreshTaskRequest(identifier: taskID)
-        request.earliestBeginDate = Date(timeIntervalSinceNow: 15 * 60) // 15 minutes
+        // Only available on iOS 13+
+        guard #available(iOS 13.0, *) else {
+            print("[BG] Background tasks not available on this iOS version")
+            return
+        }
         
-        do {
-            try BGTaskScheduler.shared.submit(request)
-            print("[BG] Background fetch scheduled successfully")
-        } catch {
-            print("[BG] Failed to schedule background fetch: \(error)")
+        // Ensure we're on the main thread - BGTaskScheduler must be called from main thread
+        DispatchQueue.main.async {
+            let request = BGAppRefreshTaskRequest(identifier: self.taskID)
+            request.earliestBeginDate = Date(timeIntervalSinceNow: 15 * 60) // 15 minutes
+            
+            do {
+                try BGTaskScheduler.shared.submit(request)
+                print("[BG] Background fetch scheduled successfully for identifier: \(self.taskID)")
+            } catch let error as NSError {
+                print("[BG] Failed to schedule background fetch:")
+                print("[BG]   Error Domain: \(error.domain)")
+                print("[BG]   Error Code: \(error.code)")
+                print("[BG]   Error: \(error.localizedDescription)")
+                print("[BG]   UserInfo: \(error.userInfo)")
+            } catch {
+                print("[BG] Failed to schedule background fetch: \(error)")
+            }
         }
     }
     
     func registerBackgroundTask() {
+        // Only available on iOS 13+
+        guard #available(iOS 13.0, *) else {
+            print("[BG] Background tasks not available on this iOS version")
+            return
+        }
+        
+        // Call directly - already on main thread in didFinishLaunchingWithOptions
+        print("[BG] Registering background task with identifier: \(taskID)")
         BGTaskScheduler.shared.register(forTaskWithIdentifier: taskID, using: nil) { task in
+            print("[BG] Background task fired: \(self.taskID)")
             self.handleBackgroundFetch(task as! BGAppRefreshTask)
         }
     }

@@ -4,5 +4,14 @@
 <dict>
 	<key>aps-environment</key>
 	<string>development</string>
+	<key>com.apple.developer.backgroundmodes</key>
+	<array>
+		<string>fetch</string>
+		<string>remote-notification</string>
+	</array>
+	<key>com.apple.developer.bgtaskscheduler</key>
+	<array>
+		<string>gr.auth.aristomate.notifications.fetch</string>
+	</array>
 </dict>
 </plist>

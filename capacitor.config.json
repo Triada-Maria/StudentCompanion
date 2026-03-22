@@ -27,5 +27,9 @@
 		  "server": {
 			"hostname": "localhost",
 			"androidScheme": "https"
+		  },
+		  "ios": {
+			"scheme": "Aristomate",
+			"entitlements": "ios/App/App/App.entitlements"
 		  }
 	}
