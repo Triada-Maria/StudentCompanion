@@ -11,8 +11,8 @@ import { get } from 'svelte/store';
 
 // schedules a notification at a specific date
 export async function schedule(event: Event, notifyDate: Date, id: number){
-    try{     
-        const notification: any = {  
+    try{        
+        const notification: any = {
             title: event.title,
             body: event.description ? event.description : `${get(t)("event.notification.descriptionPlaceholder")} ${getEventTypeValue(event.type, getLocale())}`,
             id: id,

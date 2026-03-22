@@ -5,7 +5,8 @@ import Capacitor
 class BackgroundTaskHandler {
     static let shared = BackgroundTaskHandler()
     
-    private let taskID = "gr.auth.aristomate.webmail.fetch"
+    private let taskID = "gr.auth.aristomate.notifications.fetch"
+    private let defaults = UserDefaults.standard
     
     func scheduleBackgroundFetch() {
         let request = BGAppRefreshTaskRequest(identifier: taskID)
@@ -26,20 +27,32 @@ class BackgroundTaskHandler {
     }
     
     private func handleBackgroundFetch(_ task: BGAppRefreshTask) {
-        print("[BG] Starting background webmail fetch...")
+        print("[BG] Starting background notification fetch...")
         
         // Schedule the next background fetch
         scheduleBackgroundFetch()
         
-        // Fetch webmail notifications
-        fetchWebmailNotifications { success in
-            if success {
-                print("[BG] Background fetch completed successfully")
-                task.setTaskCompleted(success: true)
-            } else {
-                print("[BG] Background fetch failed")
-                task.setTaskCompleted(success: false)
-            }
+        // Fetch all notifications
+        let group = DispatchGroup()
+        var notificationCount = 0
+        
+        // Fetch Universis notifications
+        group.enter()
+        fetchUniversisNotifications { count in
+            notificationCount += count
+            group.leave()
+        }
+        
+        // Fetch Webmail notifications
+        group.enter()
+        fetchWebmailNotifications { count in
+            notificationCount += count
+            group.leave()
+        }
+        
+        group.notify(queue: .main) {
+            print("[BG] Background fetch completed - \(notificationCount) notifications displayed")
+            task.setTaskCompleted(success: notificationCount >= 0)
         }
         
         // Handle task expiration
@@ -49,17 +62,154 @@ class BackgroundTaskHandler {
         }
     }
     
-    private func fetchWebmailNotifications(completion: @escaping (Bool) -> Void) {
-        // Get stored credentials from UserDefaults (Capacitor Preferences uses this)
-        let defaults = UserDefaults.standard
-        guard let username = defaults.string(forKey: "webmail_username"),
-              let password = defaults.string(forKey: "webmail_password") else {
-            print("[BG] No stored credentials found")
-            completion(false)
+    // MARK: - Universis Notifications
+    
+    private func fetchUniversisNotifications(completion: @escaping (Int) -> Void) {
+        guard let accessToken = defaults.string(forKey: "login_access_token") else {
+            print("[BG] No Universis access token found")
+            completion(0)
             return
         }
         
-        print("[BG] Retrieved stored credentials")
+        let lastTimestamp = defaults.double(forKey: "last_universis_notif_timestamp")
+        
+        let group = DispatchGroup()
+        var displayedCount = 0
+        
+        // Fetch messages
+        group.enter()
+        fetchUniversisMessages(token: accessToken, lastTimestamp: Int64(lastTimestamp)) { count in
+            displayedCount += count
+            group.leave()
+        }
+        
+        // Fetch grades
+        group.enter()
+        fetchUniversisGrades(token: accessToken, lastTimestamp: Int64(lastTimestamp)) { count in
+            displayedCount += count
+            group.leave()
+        }
+        
+        group.notify(queue: .main) {
+            // Update timestamp
+            self.defaults.set(Date().timeIntervalSince1970, forKey: "last_universis_notif_timestamp")
+            completion(displayedCount)
+        }
+    }
+    
+    private func fetchUniversisMessages(token: String, lastTimestamp: Int64, completion: @escaping (Int) -> Void) {
+        let urlString = "https://universis-api.it.auth.gr/api/Students/me/messages?$orderby=dateReceived desc, dateCreated desc&$top=3"
+        
+        guard let url = URL(string: urlString) else {
+            completion(0)
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            var count = 0
+            
+            if let data = data,
+               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let messages = json["value"] as? [[String: Any]] {
+                
+                let formatter = ISO8601DateFormatter()
+                
+                for message in messages {
+                    if let subject = message["subject"] as? String,
+                       let body = message["body"] as? String,
+                       let dateStr = message["dateReceived"] as? String ?? message["dateCreated"] as? String,
+                       let date = formatter.date(from: dateStr) {
+                        
+                        let timestamp = Int64(date.timeIntervalSince1970)
+                        if timestamp > lastTimestamp {
+                            self.displayNotification(
+                                title: "Universis",
+                                body: subject,
+                                summary: body.trimmingCharacters(in: .whitespaces).prefix(100),
+                                source: "universis"
+                            )
+                            count += 1
+                        }
+                    }
+                }
+            }
+            
+            completion(count)
+        }.resume()
+    }
+    
+    private func fetchUniversisGrades(token: String, lastTimestamp: Int64, completion: @escaping (Int) -> Void) {
+        let formatter = ISO8601DateFormatter()
+        let lastModifiedDate = Date(timeIntervalSince1970: TimeInterval(lastTimestamp))
+        let formattedDate = formatter.string(from: lastModifiedDate).prefix(19) // yyyy-MM-ddTHH:mm:ss
+        
+        let urlString = "https://universis-api.it.auth.gr/api/students/me/grades?$expand=course($expand=gradeScale,locale)&$filter=gradeModified gt '\(formattedDate)'&$top=-1&$count=false"
+        
+        guard let url = URL(string: urlString) else {
+            completion(0)
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            var count = 0
+            
+            if let data = data,
+               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let grades = json["value"] as? [[String: Any]] {
+                
+                let isoFormatter = ISO8601DateFormatter()
+                
+                for grade in grades {
+                    if let course = grade["course"] as? [String: Any],
+                       let courseName = course["name"] as? String,
+                       let examGrade = grade["examGrade"] as? Double,
+                       let gradeScale = course["gradeScale"] as? [String: Any],
+                       let scaleFactor = gradeScale["scaleFactor"] as? Double,
+                       let dateStr = grade["gradeModified"] as? String,
+                       let date = isoFormatter.date(from: dateStr) {
+                        
+                        let timestamp = Int64(date.timeIntervalSince1970)
+                        if timestamp > lastTimestamp {
+                            let factor = scaleFactor == 0 ? 1.0 : scaleFactor
+                            let finalGrade = String(format: "%.1f", examGrade / factor)
+                            let isPassed = grade["isPassed"] as? Int == 1
+                            let title = "\(finalGrade)"
+                            
+                            self.displayNotification(
+                                title: title,
+                                body: courseName,
+                                summary: "Grade",
+                                source: "universis"
+                            )
+                            count += 1
+                        }
+                    }
+                }
+            }
+            
+            completion(count)
+        }.resume()
+    }
+    
+    // MARK: - Webmail Notifications
+    
+    private func fetchWebmailNotifications(completion: @escaping (Int) -> Void) {
+        guard let username = defaults.string(forKey: "webmail_username"),
+              let password = defaults.string(forKey: "webmail_password") else {
+            print("[BG] No stored webmail credentials found")
+            completion(0)
+            return
+        }
+        
+        let lastTimestamp = defaults.double(forKey: "last_webmail_notif_timestamp")
+        
+        print("[BG] Retrieved stored webmail credentials")
         
         // Create IMAP session
         let session = MCOIMAPSession()
@@ -79,29 +229,30 @@ class BackgroundTaskHandler {
         )
         
         fetchOp?.start { error, messages, _ in
+            var count = 0
+            
             if let error = error {
                 print("[BG] IMAP error: \(error.localizedDescription)")
-                completion(false)
+                completion(0)
                 return
             }
             
             guard let allMessages = messages as? [MCOIMAPMessage] else {
-                print("[BG] No messages found")
-                completion(true)
+                print("[BG] No webmail messages found")
+                completion(0)
                 return
             }
             
             let recentMessages = Array(allMessages.suffix(7))
-            print("[BG] Found \(recentMessages.count) recent messages")
+            print("[BG] Found \(recentMessages.count) recent webmail messages")
             
             if recentMessages.isEmpty {
-                completion(true)
+                completion(0)
                 return
             }
             
             // Fetch full message data and display notifications
             let group = DispatchGroup()
-            var displayedCount = 0
             
             for msg in recentMessages {
                 group.enter()
@@ -111,16 +262,26 @@ class BackgroundTaskHandler {
                         defer { group.leave() }
                         
                         if let _ = fetchErr {
-                            print("[BG] Error fetching message: \(String(describing: fetchErr))")
                             return
                         }
                         
-                        self.displayNotification(
-                            subject: msg.header?.subject ?? "(no subject)",
-                            sender: msg.header?.from?.displayName ?? msg.header?.from?.mailbox ?? "Unknown",
-                            uid: msg.uid
-                        )
-                        displayedCount += 1
+                        // Skip sis notifications
+                        if let sender = msg.header?.from?.mailbox, sender.contains("sis-no-reply") {
+                            return
+                        }
+                        
+                        let msgDate = msg.header?.date ?? Date()
+                        let timestamp = Int64(msgDate.timeIntervalSince1970)
+                        
+                        if timestamp > Int64(lastTimestamp) {
+                            self.displayNotification(
+                                title: msg.header?.from?.displayName ?? msg.header?.from?.mailbox ?? "Unknown",
+                                body: msg.header?.subject ?? "(no subject)",
+                                summary: "Email",
+                                source: "webmail"
+                            )
+                            count += 1
+                        }
                     }
                 } else {
                     group.leave()
@@ -128,25 +289,37 @@ class BackgroundTaskHandler {
             }
             
             group.notify(queue: .main) {
-                print("[BG] Displayed \(displayedCount) notifications")
-                completion(true)
+                // Update timestamp
+                self.defaults.set(Date().timeIntervalSince1970, forKey: "last_webmail_notif_timestamp")
+                print("[BG] Displayed \(count) webmail notifications")
+                completion(count)
             }
         }
     }
     
-    private func displayNotification(subject: String, sender: String, uid: UInt32) {
+    // MARK: - Display Notification
+    
+    private func displayNotification(title: String, body: String, summary: String, source: String) {
         let content = UNMutableNotificationContent()
-        content.title = sender
-        content.body = subject
+        content.title = title
+        content.body = body
         content.sound = .default
         content.badge = NSNumber(value: UIApplication.shared.applicationIconBadgeNumber + 1)
+        content.userInfo = ["source": source, "summary": summary]
         
-        // Add custom data to identify the notification source
-        content.userInfo = ["source": "webmail", "uid": uid]
+        // Add badge icon per source
+        switch source {
+        case "universis":
+            content.badge = NSNumber(value: UIApplication.shared.applicationIconBadgeNumber + 1)
+        case "webmail":
+            content.badge = NSNumber(value: UIApplication.shared.applicationIconBadgeNumber + 1)
+        default:
+            break
+        }
         
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
         let request = UNNotificationRequest(
-            identifier: "webmail_\(uid)",
+            identifier: "\(source)_\(UUID().uuidString)",
             content: content,
             trigger: trigger
         )
@@ -155,8 +328,9 @@ class BackgroundTaskHandler {
             if let error = error {
                 print("[BG] Failed to schedule notification: \(error)")
             } else {
-                print("[BG] Notification scheduled for: \(subject)")
+                print("[BG] Notification scheduled - \(title)")
             }
         }
     }
 }
+

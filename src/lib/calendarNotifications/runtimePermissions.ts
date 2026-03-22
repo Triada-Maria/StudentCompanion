@@ -11,7 +11,7 @@ import { handleChangedPermission } from './exactAlarmPermissionStore';
  * @returns A Promise<boolean> indicating if the permission is granted
  */
 export async function checkExactAlarmPermission(): Promise<boolean> {
-			// iOS doesn't require exact alarm permission
+		// iOS doesn't require exact alarm permission
 		if (Capacitor.getPlatform() !== 'android') {
 			return true;
 		}
@@ -101,6 +101,11 @@ export async function handleNotificationPermission() {
 
 // checks permission, and if disabled prompts user to settings
 export async function handleExactAlarmPermission(){
+	// iOS doesn't require exact alarm permission
+	if (Capacitor.getPlatform() !== 'android') {
+		return true;
+	}
+	
 	try{
 			const hasPermission = await checkExactAlarmPermission();
 

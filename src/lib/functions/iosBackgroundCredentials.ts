@@ -46,6 +46,44 @@ export async function clearWebmailCredentials(): Promise<void> {
 }
 
 /**
+ * Store Universis access token for iOS background fetch tasks
+ * iOS background tasks cannot access Svelte stores, so we need to persist the token
+ */
+export async function storeUniversisTokenForBackground(
+    accessToken: string
+): Promise<void> {
+    if (Capacitor.getPlatform() !== "ios") {
+        return; // Only needed for iOS
+    }
+
+    try {
+        await Preferences.set({
+            key: "login_access_token",
+            value: accessToken,
+        });
+        console.log("Universis access token stored for iOS background fetch");
+    } catch (error) {
+        console.error("Failed to store access token:", error);
+    }
+}
+
+/**
+ * Clear stored Universis access token (call this on logout)
+ */
+export async function clearUniversisToken(): Promise<void> {
+    if (Capacitor.getPlatform() !== "ios") {
+        return;
+    }
+
+    try {
+        await Preferences.remove({ key: "login_access_token" });
+        console.log("Universis access token cleared");
+    } catch (error) {
+        console.error("Failed to clear access token:", error);
+    }
+}
+
+/**
  * Schedule iOS background fetch (call this when app becomes active)
  */
 export async function scheduleIOSBackgroundFetch(): Promise<void> {

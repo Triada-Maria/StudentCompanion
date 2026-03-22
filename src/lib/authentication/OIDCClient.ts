@@ -4,6 +4,7 @@ import { get } from 'svelte/store';
 import { jwtDecode } from "jwt-decode";
 import { goto } from '$app/navigation';
 import { toastController } from 'ionic-svelte';
+import { storeUniversisTokenForBackground, clearUniversisToken } from '$lib/functions/iosBackgroundCredentials';
 /**
  * Flexible OpenID Connect Client with PKCE for Capacitor Apps
  * Supports both mobile (in-app browser) and web browser flows
@@ -205,6 +206,9 @@ class OIDCClient {
     this.setItemInStore('refresh_token', tokens.refresh_token);
     this.setItemInStore('id_token', tokens.id_token);
     
+    // Store access token for iOS background fetch
+    await storeUniversisTokenForBackground(tokens.access_token);
+    
     if (tokens.expires_in) {
       const expiresAt = Date.now() + (tokens.expires_in * 1000);
       this.setItemInStore('expires_at', expiresAt.toString());
@@ -269,6 +273,10 @@ class OIDCClient {
 
     // Update stored tokens
     this.setItemInStore('access_token', tokens.access_token);
+    
+    // Store access token for iOS background fetch
+    await storeUniversisTokenForBackground(tokens.access_token);
+    
     if (tokens.refresh_token) {
       this.setItemInStore('refresh_token', tokens.refresh_token);
     }
@@ -335,6 +343,9 @@ class OIDCClient {
     this.removeItemFromStore('refresh_token');
     this.removeItemFromStore('id_token');
     this.removeItemFromStore('expires_at');
+    
+    // Clear iOS background credentials
+    await clearUniversisToken();
 
     // Perform server-side logout
     // if (false && idToken && this.config.logoutUrl) {

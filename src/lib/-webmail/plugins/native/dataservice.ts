@@ -28,9 +28,11 @@ export async function validate(username: string, password: string): Promise<bool
     const port = appConfig.webmail.port;
     const validate = true;
     const response = await WebMailInboxPlugins.getInbox({username, password, server, port, validate});
+
     // If validation successful, store credentials for iOS background fetch
     if (!response.error) {
         await storeWebmailCredentialsForBackground(username, password);
     }
+
     return (!response.error);
 }
