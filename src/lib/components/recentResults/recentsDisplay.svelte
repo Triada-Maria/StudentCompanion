@@ -1,167 +1,201 @@
 <script lang="ts">
-
-    import SwipeCard from "./swipeCard.svelte";
-    import RecentGrade from "./recentGrades.svelte";
-    import Notification from "$components/notifications/notification.svelte";
-    import { dismissedItems } from "./dismissedItems";
-    import { refresh } from "ionicons/icons";
-    import { flip } from "svelte/animate";
-    import { quintOut } from 'svelte/easing';
-    import {t} from "$lib/i18n";
-
+    import { t } from '$lib/i18n';
+    import { navController } from '$components/shared/StackedNav';
+    import { schoolOutline, notificationsOutline, chevronForwardOutline } from 'ionicons/icons';
 
     export let recentItems: any[] = [];
-    export let maxCards = 6;
-    let recentlyDismissedItem: any;
-    let allRecentItems: any[] = [];
-    let showUndoButton = false;
-    let timer: any;
-    filterRecentItems();
+    export let maxCards: number = 6;
 
-    //Adding the exam to the dismissed items
-    function addToDismissedItems(id: number){
-        dismissedItems.update(ids => [...ids, id]);
-        recentlyDismissedItem = id;
+    $: displayItems = recentItems.slice(0, maxCards);
+
+    // ── helpers ────────────────────────────────────────────────
+
+    function getGradeColor(grade: number): string {
+        if (grade >= 8.5) return '#2d6a4f';
+        if (grade >= 6)   return '#7b3f00';
+        return '#611414';
     }
 
-    // Removing the exam from the dismissed items
-    function removeFromDismissedItems(id: number){
-        dismissedItems.update((items) => items.filter((item) => false));
+    function getGradeSwatchBg(grade: number): string {
+        if (grade >= 8.5) return '#e8f5ee';
+        if (grade >= 6)   return '#fdf3e7';
+        return '#fdf0f0';
     }
 
-    // remove card when swipped
-    const deleteCard = (id: { detail: number }) => {
-        const examId = id.detail;
-        recentItems = recentItems.filter((item) => item.id !== examId);
-        addToDismissedItems(examId);
-        showUndoButton = true;
+    function getGradeSwatchColor(grade: number): string {
+        if (grade >= 8.5) return '#2d6a4f';
+        if (grade >= 6)   return '#7b3f00';
+        return '#611414';
     }
 
-    // restore the most recently deleted card when undo button is pressed
-    function restoreDeletedCard(){
-        removeFromDismissedItems(recentlyDismissedItem);
-        for (const recentItem of allRecentItems){ //allRecentItems include the deleted ones
-            if (recentlyDismissedItem === recentItem.id){
-                recentItems = [...recentItems, recentItem];
-                //geting the deleted card to its previous position
-                let temp = [];     
-                for (const item of allRecentItems){
-                    if (recentItems.includes(item)){
-                        temp.push(item);
-                    }
-                }
-                recentItems = [...temp]; //To force svelte to rerender the component
-                hideUndoButton();
-                return;
-            }
-        }       
+    function formatRelativeTime(dateStr: string): string {
+        if (!dateStr) return '';
+        const date = new Date(dateStr);
+        const now = new Date();
+        const diffMs = now.getTime() - date.getTime();
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMins / 60);
+        const diffDays = Math.floor(diffHours / 24);
+        if (diffMins < 60)  return `${diffMins}' ago`;
+        if (diffHours < 24) return `${diffHours}h ago`;
+        if (diffDays === 1) return 'yesterday';
+        if (diffDays < 7)   return `${diffDays}d ago`;
+        return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
     }
 
-    function hideUndoButton() {
-        showUndoButton = false;
-        clearTimeout(timer);
+    function getCourseName(item: any): string {
+        return item.content?.courseExam?.course?.name
+            || item.content?.courseExam?.course?.locale?.name
+            || item.content?.name
+            || '—';
     }
 
-    function handleInteraction(event: any) {
-        if (event.target.closest('.undoButton')) {
-            return; // Ignore interaction if it is the undo button
-        }
-        hideUndoButton();
-        removeEventListeners();     
+    function getGradeValue(item: any): number | null {
+        const g = item.content?.grade ?? item.content?.courseExam?.grade;
+        return g != null ? parseFloat(g) : null;
     }
 
-    // adding event listeners for every possible event
-    function addEventListeners() {
-        document.addEventListener('touchstart', handleInteraction);
-        document.addEventListener('touchmove', handleInteraction);
-        document.addEventListener('focus', handleInteraction, true); // true to capture event during capturing phase
+    function getNotificationTitle(item: any): string {
+        return item.content?.title || item.content?.subject || item.content?.name || '—';
     }
 
-    function removeEventListeners() {
-        document.removeEventListener('touchstart', handleInteraction);
-        document.removeEventListener('touchmove', handleInteraction);
-        document.removeEventListener('focus', handleInteraction, true);
+    function getNotificationDate(item: any): string {
+        return item.content?.date || item.content?.createdAt || item.content?.timestamp || '';
     }
 
-    // adding event listeners if undo button appears
-    $: if (showUndoButton) {
-        addEventListeners();
-        timer = setTimeout(hideUndoButton, 8000); //Hide button after 8 seconds
-    } else {
-        removeEventListeners();
-        clearTimeout(timer);
+    function getGradeDate(item: any): string {
+        return item.content?.courseExam?.examDate || item.content?.date || '';
     }
-
-    function filterRecentItems(){
-        allRecentItems= [...recentItems];
-
-        // removing from recentGrades the exams that are already deleted
-        for (const recentItem of recentItems){           
-            if ($dismissedItems.includes(recentItem.id)){
-                recentItems = recentItems.filter((item) => item.id !== recentItem.id);
-            }
-        }
-        
-        // sorting the recentItems by date descending
-        recentItems = recentItems.sort((a, b) => {
-            const getDate = (item: any) => {
-                if (item.type === 'recentGrade') return new Date(item.content.gradeModified).getTime();
-                if (item.type === 'notification') return new Date(item.content.dateReceived).getTime();
-                return 0;
-            };
-            return getDate(b) - getDate(a);
-        });
-
-        // keeping the top maxCards items
-        if (recentItems.length > maxCards){ 
-            recentItems = recentItems.slice(0, maxCards); 
-        }
-    }
-
 </script>
 
-<div class="recentGrades ion-padding">
-    
-    {#if recentItems.length === 0}
-            <p class="ion-padding" style="color: var(--ion-color-medium)">{$t('recentgrades.nonews')}</p>
+<div class="news-feed">
+    {#if displayItems.length === 0}
+        <div class="empty-state">
+            <ion-icon icon={notificationsOutline} class="empty-icon" />
+            <span class="empty-text">{$t('homepage.noUpdates')}</span>
+        </div>
     {:else}
-        {#each recentItems as recentItem (recentItem.id)} 
-            <div animate:flip={{ duration: 500, easing: quintOut }}>
-                <SwipeCard id={recentItem.id} on:delete-card={deleteCard} > 
-                    {#if recentItem.type === "recentGrade"}
-                        <RecentGrade subject={recentItem.content}/>
-                    {:else}
-                        <Notification notification={recentItem.content}/>
-                    {/if}
-                </SwipeCard>
-            </div>
+        {#each displayItems as item (item.id)}
+            {#if item.type === 'recentGrade'}
+                {@const grade = getGradeValue(item)}
+                {@const barColor = getGradeColor(grade ?? 0)}
+                {@const swatchBg = getGradeSwatchBg(grade ?? 0)}
+                {@const swatchColor = getGradeSwatchColor(grade ?? 0)}
+                <div class="news-card">
+                    <div class="news-bar" style="background: {barColor};" />
+                    <div class="news-body">
+                        <div class="news-tag">{'homepage.recentGrade'}</div>
+                        <div class="news-title">{getCourseName(item)}</div>
+                        <div class="news-time">{formatRelativeTime(getGradeDate(item))}</div>
+                    </div>
+                    <div class="news-swatch" style="background: {swatchBg};">
+                        {#if grade !== null}
+                            <span class="grade-val" style="color: {swatchColor};">{grade % 1 === 0 ? grade : grade.toFixed(1)}</span>
+                        {:else}
+                            <ion-icon icon={schoolOutline} style="color: {swatchColor}; font-size: 1.2rem;" />
+                        {/if}
+                    </div>
+                </div>
+            {:else if item.type === 'notification'}
+                <div class="news-card">
+                    <div class="news-bar" style="background: #1d4e89;" />
+                    <div class="news-body">
+                        <div class="news-tag">{$t('homepage.notification')}</div>
+                        <div class="news-title">{getNotificationTitle(item)}</div>
+                        <div class="news-time">{formatRelativeTime(getNotificationDate(item))}</div>
+                    </div>
+                    <div class="news-swatch" style="background: #e8f0f8;">
+                        <ion-icon icon={notificationsOutline} style="color: #1d4e89; font-size: 1.2rem;" />
+                    </div>
+                </div>
+            {/if}
         {/each}
     {/if}
-
-    <div class="button-container">
-        {#if showUndoButton}
-          <ion-button class="undoButton ion-padding" on:click={restoreDeletedCard} aria-hidden><ion-icon icon={refresh}></ion-icon></ion-button>
-        {/if}
-    </div>
-    
 </div>
 
 <style>
-    .recentGrades {
+    .news-feed {
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
-        padding: 0;
+        gap: 0.45rem;
     }
 
-    .button-container {
-        position: fixed;
-        bottom: 1rem;
-        right: 1rem;
-        z-index: 999;
+    .news-card {
+        display: flex;
+        align-items: stretch;
+        background: var(--app-color-map-input, #fff);
+        border-radius: 0.875rem;
+        border: 1px solid var(--ion-color-light-shade);
+        overflow: hidden;
+        cursor: pointer;
     }
-    .undoButton {
-        --border-radius: 1rem;
-        --box-shadow: var(--shadow-short-md);
+
+    .news-bar {
+        width: 4px;
+        flex-shrink: 0;
+    }
+
+    .news-body {
+        flex: 1;
+        min-width: 0;
+        padding: 0.65rem 0.75rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+    }
+
+    .news-tag {
+        font-size: 0.6rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--ion-color-medium);
+    }
+
+    .news-title {
+        font-size: 0.85rem;
+        font-weight: 600;
+        line-height: 1.35;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .news-time {
+        font-size: 0.7rem;
+        color: var(--ion-color-medium);
+    }
+
+    .news-swatch {
+        width: 3.25rem;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .grade-val {
+        font-size: 1.1rem;
+        font-weight: 800;
+        line-height: 1;
+    }
+
+    .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 2rem 0;
+        opacity: 0.45;
+    }
+
+    .empty-icon {
+        font-size: 1.75rem;
+        color: var(--ion-color-medium);
+    }
+
+    .empty-text {
+        font-size: 0.85rem;
+        color: var(--ion-color-medium);
     }
 </style>
