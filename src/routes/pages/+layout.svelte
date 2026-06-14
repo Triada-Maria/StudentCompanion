@@ -1,8 +1,10 @@
 <script lang="ts">
   	import IonTabs from '$lib/components/shared/AristomateTabBar.svelte';
-	import { restaurant, calendarClear, map, statsChart } from 'ionicons/icons';
+	import { home, homeOutline, restaurantOutline, restaurant, mapOutline, calendarClearOutline, calendarClear, map, statsChart, statsChartOutline } from 'ionicons/icons';
 	import home_solid from "$customIcons/home-solid.svg";
 	import user_solid from "$customIcons/user-solid.svg";
+	import home_full from "$lib/assets/home-full.svg";
+	import home_empty from "$lib/assets/home-empty.svg";
 	import chart_bar_solid from "$customIcons/chart-bar-solid.svg";
 	import { onMount } from 'svelte';
 	import initializeNotifications from '$lib/-notifications/core';
@@ -12,36 +14,48 @@
 
 
 	// Routes
+	$: restaurantIcon = activeTab === 'menu' ? restaurant : restaurantOutline;
+	$: mapIcon = activeTab === 'maps' ? map : mapOutline;
+	$: statsChartIcon = activeTab === 'grades' ? statsChart : statsChartOutline;
+	$: calendarIcon = activeTab === 'calendar' ? calendarClear : calendarClearOutline;
+	$: homeIcon = activeTab === "homepage" ? home : homeOutline;
+
 	$: bottomNav = [
 		{
 			label: $t('navigation.maps'),
-			icon: map,
+			icon: mapIcon,
 			tab: 'maps'
 		},
 		{
 			label: $t('navigation.club'),
-			icon: restaurant,
+			icon: restaurantIcon,
 			tab: 'menu'
 		},
 		{
 			label: $t('navigation.home'),
-			icon: home_solid,
+			icon: homeIcon,
 			tab: 'homepage'
 		},
 		{
 			label: $t('navigation.progress'),
-			icon: statsChart,
+			icon: statsChartIcon,
 			tab: 'grades'
 		},
 		{
 			label: $t('navigation.calendar'),
-			icon: calendarClear,
+			icon: calendarIcon,
 			tab: 'calendar'
 		}
 		
 	];
 
-	const logsStuff =()=>{};
+	let activeTab = 'homepage';
+
+	const handleTabChange = (event: any) => {
+		activeTab = event.detail.tab;
+	};
+
+	const logsStuff = () => {};
 
 	onMount(async ()=>{
 		if ($webmailAuthenticated) {
@@ -54,6 +68,6 @@
 
 </script>
 
-<IonTabs slot="bottom" tabs={bottomNav} ionTabsWillChange={logsStuff} ionTabsDidChange={logsStuff}>
+	<IonTabs slot="bottom" tabs={bottomNav} ionTabsWillChange={logsStuff} ionTabsDidChange={handleTabChange}>
 	<slot />
 </IonTabs>
