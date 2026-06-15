@@ -279,7 +279,11 @@ export default {
 		'customCourse.coefficient': 'Συντελεστής',
 		"homepage.today": "Σήμερα",
 		"homepage.tomorrow": "Αύριο",
-		"recentgrades.nonews": "Δεν υπάρχουν νέα."
+		"recentgrades.nonews": "Δεν υπάρχουν νέα.",
+		"recentgrades.period.today": "Σήμερα",
+		"recentgrades.period.yesterday": "Χθες",
+		"recentgrades.period.this_week": "Τελευταία βδομάδα",
+		"recentgrades.period.earlier": "Νωρίτερα"
 	},
 	en: {
 		'navigation.home': 'Home',
@@ -583,6 +587,10 @@ export default {
 		'customCourse.coefficient': 'Coefficient',
 		"homepage.today": "Today",
 		"homepage.tomorrow": "Tomorrow",
-		"recentgrades.nonews": "Nothing new."
+		"recentgrades.nonews": "Nothing new.",
+		"recentgrades.period.today": "Today",
+		"recentgrades.period.yesterday": "Yesterday",
+		"recentgrades.period.this_week": "This week",
+		"recentgrades.period.earlier": "Earlier"
 	}
 };
