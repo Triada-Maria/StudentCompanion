@@ -199,8 +199,7 @@
 							<img class="avatar" alt="woman" src={woman} />
 							{/if}
 							<div>
-								<h5 style="padding-left: 0.2rem;">{$t('homepage.greeting')}, <span><b>{getVocativeCase(givenName)}!</b></span></h5>
-								
+								<h6 style="color: var(--ion-color-dark-tint) !important; padding-left: 0.2rem;">{$t('homepage.greeting')}, <span><b>{getVocativeCase(givenName)}!</b></span></h6>
 							</div>
 						</div>
 					</div>
@@ -248,7 +247,7 @@
 
 			
 			
-			<div class="services-section" style="padding-top: 0.5rem !important;">
+			<div class="services-section" style="padding-block: 0.5rem !important;">
 				<div class="service-buttons-grid">
 					<div class="service-button ion-activatable" on:click={() => {navController.push(Links);}} aria-hidden>
 						<ion-icon icon={linkOutline} color="primary" class="service-button-icon"></ion-icon>
@@ -530,7 +529,7 @@
 		margin: 0 0 0.625rem 0;
 		font-size: 1.125rem;
 		font-weight: 600;
-		color: var(--ion-text-color);
+		color: var(--ion-color-dark-tint);
 	}
 
 	.events-container {
