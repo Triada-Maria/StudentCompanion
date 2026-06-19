@@ -2,6 +2,7 @@ import { Capacitor } from "@capacitor/core";
 import { goto } from "$app/navigation";
 import OIDCClient from "$lib/authentication/OIDCClient";
 import Config from "$src/app.config";
+import Dexie from "dexie";
 
 
 // Initialize OIDC client
@@ -21,6 +22,9 @@ export async function handleCallback(url: string) {
       // Get user info
       userInfo = await authClient.getUserInfo();
       isAuthenticated = true;
+
+      // Fresh cache
+      await Dexie.delete('cachedData');
 
       // Clean URL and redirect
       // console.log("[src/login/login.ts] Navigating to homepage");
