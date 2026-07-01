@@ -258,6 +258,9 @@ export default {
 		"credential.save_account": "Αποθήκευσε τον ιδρυματικό σου λογαριασμό απευθείας στη συσκευή σου για να λαμβάνεις ειδοποιήσεις από το webmail και το eLearning!",
 		"credential.academic_name": "Ιδρυματικό όνομα χρήστη",
 		"credential.password": "Κωδικός πρόσβασης",
+		"credential.show_password": "Εμφάνιση κωδικού",
+		"credential.hide_password": "Απόκρυψη κωδικού",
+		"credential.missing_fields": "Συμπληρώστε και τα δύο πεδία.",
 		'update.UpdateHeader': 'Διαθέσιμη ενημέρωση',
 		'update.UpdateHeaderRequired': 'Απαιτείται ενημέρωση',
 		'update.UpdateAvailable':
@@ -554,6 +557,9 @@ export default {
 			'Save your academic account directly to your device to receive webmail and eLearning notifications!',
 		'credential.academic_name': 'Academic username',
 		'credential.password': 'Password',
+		'credential.show_password': 'Show password',
+		'credential.hide_password': 'Hide password',
+		'credential.missing_fields': 'Please fill in both fields.',
 		'update.UpdateHeader': 'Update Available',
 		'update.UpdateHeaderRequired': 'Update Required',
 		'update.UpdateAvailable':

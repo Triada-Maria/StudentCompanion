@@ -2,11 +2,13 @@
     import darkIcon from "./icon_dark.png";
     import lightIcon from "./icon_light.png";
 	import { webmailLoggedIn as autheticationFlag} from '$components/webmailLogin/userCredsFlagStore';
-	import { showLoginAlert } from "../credentialLogin";
+	import CredentialLoginModal from "../CredentialLoginModal.svelte";
+
+	let isOpen = false;
 </script>
 
 {#if !$autheticationFlag}
-    <ion-card href="" aria-hidden on:click ={showLoginAlert}>
+    <ion-card href="" aria-hidden on:click={() => (isOpen = true)}>
         <div class="mainContents">
             <img src={darkIcon} alt="Dark Icon" class="icon darkIcon"/>
             <img src={lightIcon} alt="Light Icon" class="icon lightIcon"/>
@@ -17,6 +19,8 @@
         </div>
     </ion-card>
 {/if}
+
+<CredentialLoginModal bind:isOpen />
 
 <style>
 
@@ -66,10 +70,10 @@
     ion-card::before{
         content: "";
         position: absolute;
-        top: 0; 
+        top: 0;
         left: 0;
-        width: 100%; 
-        height: 100%; 
+        width: 100%;
+        height: 100%;
         background-image: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
         background-size: 400% 400%;
         animation: gradientAnimation 10s linear infinite;
