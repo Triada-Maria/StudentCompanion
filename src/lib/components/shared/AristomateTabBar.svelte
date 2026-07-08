@@ -164,7 +164,7 @@
 
 <style>
 	.tabbaricons {
-		font-size: x-large;
+		font-size: 1.5rem;
 	}
 
 	ion-tab-bar {

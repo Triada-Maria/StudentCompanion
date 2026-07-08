@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from "svelte";
     import { neoUniversisGet } from "$src/lib/dataService";
-    import adBanner from '$lib/assets/ad.png';
+    import adBanner from '$lib/assets/Advert_dark.png';
 
     export let semester;
     export let departmentName;

@@ -2,7 +2,7 @@
 	import { averages } from '$lib/functions/gradeAverages/averages';
 	import { neoUniversisGet } from '$lib/dataService';
 	import man from '$lib/assets/man.svg';
-	import { locationOutline, walletOutline, shield, settingsOutline, calendarOutline, shieldOutline, linkOutline, notificationsCircle, cloudOfflineOutline, barbellOutline, addOutline } from 'ionicons/icons';
+	import { locationOutline, walletOutline, shield, settingsOutline, calendarOutline, shieldOutline, linkOutline, notificationsCircle, cloudOfflineOutline, barbellOutline, addOutline, ellipsisHorizontal } from 'ionicons/icons';
 	import woman from '$lib/assets/woman.svg';
 	import avatar from '$lib/assets/.svg';
 	import { register } from 'swiper/element/bundle';
@@ -188,66 +188,45 @@
 		<HomepageSkeleton />
 		{:then}
 		<div id="scrolled_content">
-			<div class="personal-section {isProfileExpanded ? 'expanded-personal-section' : ''}">
+		<!-- {isProfileExpanded ? 'expanded-personal-section' : ''} -->
+			<div class="personal-section">
 				<div class="info-container">
 					<div class="header ion-activatable" on:click={() => { isProfileExpanded = !isProfileExpanded;}} aria-hidden>
-						<ion-ripple-effect/>
+						<!-- <ion-ripple-effect/> -->
 						<div class="welcome">
-							{#if gender === 'Α'}
-							<img class="avatar" alt="man" src={man} />
-							{:else}
-							<img class="avatar" alt="woman" src={woman} />
-							{/if}
-							<div>
-								<h6 style="color: var(--ion-color-dark-tint) !important; padding-left: 0.2rem;">{$t('homepage.greeting')}, <span><b>{getVocativeCase(givenName)}!</b></span></h6>
-							</div>
+							<h5 style="color: var(--ion-color-medium) !important; padding-left: 0.2rem;"><span style="font-size: 0.8em;">{$t('homepage.greeting')},</span> <br/> <span style="color: var(--ion-color-dark-tint);"><b>{getVocativeCase(givenName)} {getVocativeCase(familyName)}!</b></span>
+							</h5>
 						</div>
+						
+						<div>
+					</div>
 					</div>
 					<div class="settings-icon-container ion-activatable" on:click={() => {navController.push(PersonalInfo);}} aria-hidden>
 						<ion-ripple-effect/>
-						<ion-icon icon={settingsOutline} class="settings-icon"></ion-icon>
+						{#if gender === 'Α'}
+						<img class="avatar" alt="man" src={man} />
+						{:else}
+						<img class="avatar" alt="woman" src={woman} />
+						{/if}
+						<!-- <ion-icon icon={settingsOutline} class="settings-icon"></ion-icon> -->
 					</div>
 
 				</div>
 
-				{#if isProfileExpanded}
-					<div class="profile-panel" transition:slide={{ duration: 280, easing: cubicOut }}>
-						<div class="profile-panel-inner">
-							<div class="profile-info-grid">
-								<div class="profile-info-item">
-									<span class="profile-info-label">{$t('homepage.fullname')}</span>
-									<span class="profile-info-value">{givenName} {familyName}</span>
-								</div>
-								<div class="profile-info-item">
-									<span class="profile-info-label">{$t('homepage.enrollmentYear')}</span>
-									<span class="profile-info-value">{inscriptionYear}</span>
-								</div>
-								<div class="profile-info-item">
-									<span class="profile-info-label">{$t('homepage.aem')}</span>
-									<span class="profile-info-value">{aem}</span>
-								</div>
-								<div class="profile-info-item">
-									<span class="profile-info-label">{$t('homepage.apm')}</span>
-									<span class="profile-info-value">{apm}</span>
-								</div>
-								<div class="profile-info-item">
-									<span class="profile-info-label">{$t("homepage.email")}</span>
-									<span class="profile-info-value">{email}</span>
-								</div>
-								<div class="profile-info-item">
-									<span class="profile-info-label">{$t("homepage.username")}</span>
-									<span class="profile-info-value">{username}</span>
-								</div>
-							</div>
-						</div>
-					</div>
-				{/if}
-
 			</div>
 
+			<div class="wallet-section" style="padding: 0 1.5rem 1.5rem 1.5rem;">
+				<WalletCard 
+				{departmentName}
+				{studyLevel}
+				{actualSemester}
+				{numPassedSubjects}
+				{numSubjects}
+				{average}
+				/>
+			</div>
 			
-			
-			<div class="services-section" style="padding-block: 0.5rem !important;">
+			<div class="services-section">
 				<div class="service-buttons-grid">
 					<div class="service-button ion-activatable" on:click={() => {navController.push(Links);}} aria-hidden>
 						<ion-icon icon={linkOutline} color="primary" class="service-button-icon"></ion-icon>
@@ -264,101 +243,99 @@
 				</div>
 			</div>
 
-			<div class="wallet-section" style="padding: 0 1.5rem 1.5rem 1.5rem;">
-				<WalletCard 
-				{departmentName}
-				{studyLevel}
-				{actualSemester}
-				{numPassedSubjects}
-				{numSubjects}
-				{average}
-				/>
-			</div>
-			
-			<div class="events-section" style="padding-inline:0 !important;">
-				<!-- Upcoming Events Section -->
-				{#if upcomingEvents.length > 0}
-					<div class="section-title-row" style="padding-left: 1.5rem;">
-						<h4 class="middle-title">{$t('homepage.dontForget')}</h4>
-						<svg class="zigzag-line" viewBox="0 0 100 10" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-							<polyline
+			{#if upcomingEvents.length > 0}
+				<div style="padding-block: 1.5rem;">
+
+					<div class="events-section" style="padding-inline:0 !important;">
+						<!-- Upcoming Events Section -->
+						<div class="section-title-row" style="padding-left: 1.5rem;">
+							<h4 class="middle-title" style="padding-bottom: 0.5rem;">{upcomingEvents.length > 0 ? $t('homepage.dontForget') : $t('homepage.allClear')}</h4>
+							<svg class="zigzag-line" viewBox="0 0 100 10" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+								<polyline
 								points="0,8 5,2 10,8 15,2 20,8 25,2 30,8 35,2 40,8 45,2 50,8 55,2 60,8 65,2 70,8 75,2 80,8 85,2 90,8 95,2 100,8"
 								fill="none"
 								stroke="currentColor"
 								stroke-width="1.8"
 								stroke-dasharray="5 3"
 								stroke-linecap="round"
-								opacity="0.28"
-							/>
-						</svg>
-					</div>				
-				<div class="events-container" style="padding-inline:0 !important;">
-					{#each upcomingEvents as event}
-						<div class="event-card ion-activatable" data-type={event.type} aria-hidden
-							on:click={() => { goto(`/pages/calendar?showEventId=${encodeURIComponent(event.id)}&eventDate=${encodeURIComponent((new Date(event.slot.start)).toISOString())}`); }}>
-							<div class="event-header">
-							<div class="event-type-badge">
-								{event.type}
-							</div>
-							<span class="event-time-top">
-								{formatEventDate(event.slot.start)} • {formatEventTime(event.slot.start)}
-							</span>
-							</div>
-							<h5 class="event-title">{event.title}</h5>
-							<div class="event-footer">
-							{#if event.location}
-								<div class="event-detail-item">
-								<ion-icon icon={locationOutline} class="event-footer-icon"></ion-icon>
-								<span class="event-footer-text">{event.location}</span>
+								opacity="0.28"/>
+							</svg>
+						</div>	
+					</div>			
+					<div class="events-container" style="padding-inline:0 !important;">
+						{#each upcomingEvents as event}
+							<div class="event-card ion-activatable" data-type={event.type} aria-hidden
+										on:click={() => { goto(`/pages/calendar?showEventId=${encodeURIComponent(event.id)}&eventDate=${encodeURIComponent((new Date(event.slot.start)).toISOString())}`); }}>
+								<div class="event-header">
+									<div class="event-type-badge">
+										{event.type}
+									</div>
+									<span class="event-time-top">
+										{formatEventDate(event.slot.start)} • {formatEventTime(event.slot.start)}
+									</span>
 								</div>
-							{/if}
+								<h5 class="event-title">{event.title}</h5>
+								<div class="event-footer">
+									{#if event.location}
+									<div class="event-detail-item">
+										<ion-icon icon={locationOutline} class="event-footer-icon"></ion-icon>
+										<span class="event-footer-text">{event.location}</span>
+									</div>
+									{/if}
+								</div>
+								<ion-ripple-effect></ion-ripple-effect>
 							</div>
-							<ion-ripple-effect></ion-ripple-effect>
-						</div>
-					{/each}
-				</div>
-			{:else}
-			<!-- Create Event Prompt -->
-			<h4 class="middle-title">{$t('homepage.dontForget')}</h4>
-			<!-- svelte-ignore a11y-click-events-have-key-events -->
-			<!-- svelte-ignore a11y-no-static-element-interactions -->
-			<div class="events-container">
-				<!-- svelte-ignore a11y-click-events-have-key-events -->
-				<!-- TODO: Convert to ion card! -->
-				<div class="event-card create-event-card" on:click={() => goto('/pages/calendar')}>
-					<h5 class="event-title" style="opacity: 0.7;">{$t('homepage.noEvents')}</h5>
-					<div class="event-header">
-						<div class="event-header-left">
-							<div class="event-type-badge">
-								<ion-icon icon={addOutline}></ion-icon>
-							</div>
-							<div class="event-detail-item">
-								<span class="event-time">
-									{$t('homepage.createNew')}
-								</span>
-							</div>
-						</div>
+						{/each}
 					</div>
 				</div>
-			</div>
+			{:else}
+				<!-- No Events Empty State -->
+				<!-- svelte-ignore a11y-click-events-have-key-events -->
+				<!-- svelte-ignore a11y-no-static-element-interactions -->
+				<div class="no-events-card ion-activatable" style="margin-inline: 1.5rem;" on:click={() => goto('/pages/calendar')} aria-hidden>
+					<div class="no-events-icon">
+						<ion-icon icon={calendarOutline}></ion-icon>
+					</div>
+					<div class="no-events-text">
+						<span class="no-events-title">{$t('homepage.noEvents')}</span>
+						<!-- <span class="no-events-subtitle">{$t('homepage.noEventsSubtitle')}</span> -->
+					</div>
+					<div class="no-events-cta">
+						<ion-icon icon={addOutline}></ion-icon>
+						<span>{$t('homepage.createNew')}</span>
+					</div>
+					<ion-ripple-effect></ion-ripple-effect>
+				</div>
 			{/if}
-
-		</div>
-		<AdBanner departmentName={departmentName} semester={actualSemester}/>
+			<!-- <svg class="zigzag-line" style="padding-left: 0rem; box-sizing: border-box;" viewBox="0 0 100 10" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+			<polyline
+			points="0,8 5,2 10,8 15,2 20,8 25,2 30,8 35,2 40,8 45,2 50,8 55,2 60,8 65,2 70,8 75,2 80,8 85,2 90,8 95,2 100,8"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="1.8"
+							stroke-dasharray="5 3"
+							stroke-linecap="round"
+							opacity="0.28"
+						/>
+			</svg> -->
 		<div class="updates-section">
 			<div style="display: flex; justify-content: space-between; align-items: center;">
 				<h4 class="middle-title" style="margin-bottom: 0;">{$t('homepage.updates')}</h4>
 				<!-- svelte-ignore a11y-click-events-have-key-events -->
 				<!-- svelte-ignore a11y-no-static-element-interactions -->
 				<div class="service-icon-container" on:click={() => {navController.push(Notifications);}}>
-					<ion-label style="font-size: 0.85rem; font-weight: 500; color: var(--ion-color-medium);">{$t("homepage.seemore")}</ion-label>
-					<!-- <ion-icon icon={notificationsCircle} style="font-size:2rem;"></ion-icon> -->
+					<ion-icon icon={ellipsisHorizontal} style="font-size: 1.3rem; color: var(--ion-color-medium);"></ion-icon>
 				</div>
 			</div>
 			<div style="margin-top: 0.5rem;">
 				<RecentItems maxCards={6}/>
 			</div>
 		</div>
+		
+		<div style="padding: 1.5rem 0 0 0;">
+			<AdBanner departmentName={departmentName} semester={actualSemester}/>
+		</div>
+
 	</div>
 	
 	{:catch error}
@@ -423,7 +400,7 @@
 	.avatar {
 		width: 3rem;
 		margin-block-start: 0rem;
-		margin-inline-end: 0.5rem;
+		margin-inline-end: 0rem;
 	}
 
 	.info-container {
@@ -440,7 +417,7 @@
 		align-items: center;
 		flex: 1;
 		overflow: hidden;
-		border-radius: 50px;
+		/* border-radius: 50px; */
 		position: relative;
 	}
 
@@ -474,6 +451,10 @@
 		position: relative;
 	}
 
+	:global(body.dark) .service-button {
+		background: var(--app-color-primary) !important;
+	}
+
 	.service-button {
 		display: flex;
 		flex-direction: row;
@@ -485,17 +466,14 @@
 		cursor: pointer;
 		transition: all 0.2s ease;
 		background: var(--app-color-map-input);
-		border: 1px solid var(--ion-color-light-shade);
+		/* border: 1px solid var(--ion-color-light-shade); */
 		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 		position: relative;
 		overflow: hidden;
 		backdrop-filter: blur(12px);
-		-webkit-backdrop-filter: blur(12px); /* Safari */
+		/* -webkit-backdrop-filter: blur(12px); Safari */
 		/* border: 1px solid rgba(255, 255, 255, 0.25); */
 		/* border-top: 1px solid rgba(255, 255, 255, 0.45); light hits top edge */
-		box-shadow:
-			0 4px 16px rgba(0, 0, 0, 0.12),
-			inset 0 1px 0 rgba(255, 255, 255, 0.2); /* inner top highlight */
 	}
 
 	.service-button:active {
@@ -517,7 +495,7 @@
 	}
 
 	.events-section, .updates-section, .services-section {
-		padding: 0rem 1.5rem 1.5rem 1.5rem;
+		padding: 0rem 1.5rem 0 1.5rem;
 	}
 
 	.services-section {
@@ -529,7 +507,7 @@
 		margin: 0 0 0.625rem 0;
 		font-size: 1.125rem;
 		font-weight: 600;
-		color: var(--ion-color-dark-tint);
+		color: var(--ion-color-medium);
 	}
 
 	.events-container {
@@ -549,8 +527,12 @@
 
 .events-container> div:first-child {
     margin-left: 1.5rem;
-    padding-left: 1.5rem;
 }
+
+.events-container> div:last-child {
+    margin-right: 1.5rem;
+}
+
 
 
 .event-card {
@@ -567,16 +549,16 @@
 
 /* Card background colors per type */
 .event-card[data-type="TEST"] {
-  background: #e53935;
+  background: #e53835bc;
 }
 .event-card[data-type="ASSIGNMENT"] {
-  background: #fb8c00;
+  background: #fb8a00b3;
 }
 .event-card[data-type="CLASS"] {
-  background: #43a047;
+  background: #43a048d1;
 }
 .event-card[data-type="TASK"] {
-  background: #1e88e5;
+  background: #1e88e5bc;
 }
 .event-card[data-type="OTHER"] {
   background: #bcbaba;
@@ -653,57 +635,70 @@ white-space: nowrap; /* Don't forget this one */
   white-space: nowrap;
 }
 
-	
-	/* Profile panel sits inside the gradient section */
-	.profile-panel {
-		margin-bottom: 0.5rem;
-		margin-top: 0.5rem;
-		overflow: hidden;
-	}
+.no-events-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  border-radius: 1rem;
+  padding: 1rem;
+  padding-block: 2rem;
+  cursor: pointer;
+  overflow: hidden;
+}
 
-	.profile-panel-inner {
-		/* background: rgba(255, 255, 255, 0.1); */
-		backdrop-filter: blur(12px);
-		-webkit-backdrop-filter: blur(12px);
-		/* border: 1px solid rgba(255, 255, 255, 0.18); */
-		border-radius: 1rem;
-		/* padding: 1rem; */
-		display: flex;
-		flex-direction: column;
-		gap: 0.75rem;
-	}
+.no-events-icon {
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ion-color-primary);
+  color: var(--ion-color-primary-contrast);
+  font-size: 1.3rem;
+}
 
-	.profile-info-grid {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 0.6rem;
-	}
+.no-events-text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
 
-	.profile-info-item {
-		display: flex;
-		flex-direction: column;
-		gap: 0.1rem;
-		background: rgba(74, 73, 73, 0.08);
-		border-radius: 0.6rem;
-		padding: 0.5rem 0.65rem;
-	}
+.no-events-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--ion-text-color);
+}
 
-	.profile-info-label {
-		font-size: 0.65rem;
-		font-weight: 600;
-		letter-spacing: 0.5px;
-		color: var(--ion-color-medium);
-	}
+.no-events-subtitle {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--ion-color-medium);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
-	.profile-info-value {
-		font-size: 0.85rem;
-		font-weight: 500;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-		white-space: normal;       /* allow wrapping */
-    	word-break: break-word;    /* break long strings like emails */
-	}
+.no-events-cta {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ion-color-primary);
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.6rem;
+  background: rgba(var(--ion-color-primary-rgb), 0.12);
+}
+
+.no-events-cta ion-icon {
+  font-size: 1rem;
+}
+
 
 .section-title-row {
     display: flex;
@@ -719,6 +714,8 @@ white-space: nowrap; /* Don't forget this one */
 }
 
 .zigzag-line {
+    display: block;
+    width: 100%;
     flex: 1;
     height: 10px;
     color: var(--ion-color-medium);

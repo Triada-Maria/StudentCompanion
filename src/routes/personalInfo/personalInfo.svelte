@@ -33,18 +33,17 @@
 			{ lifetime: 86000 }
 		);
 
-		let user = await neoUniversisGet('Users/me', { lifetime: 86000 });
 		aem = personalData.studentIdentifier;
 		apm = personalData.uniqueIdentifier;
 		inscriptionYear = personalData.inscriptionYear.name;
 		birthDate = personalData.person.birthDate.slice(0, 10);
 		email = personalData.person.email;
-		username = user.name;
+		username = email.split('@')[0];
 		familyName = personalData.person.familyName;
 		givenName = personalData.person.givenName;
 		gender = personalData.person.gender;
 		departmentName = personalData.department.name;
-		semester = personalData.semester;
+		semester = personalData.actualSemester;
 		study_level = personalData.studyProgram.studyLevel.name;
 	}
 </script>
@@ -60,6 +59,7 @@
 				{gender}
 				{aem}
 				{apm}
+				{inscriptionYear}
 				{birthDate}
 				{email}
 				{familyName}

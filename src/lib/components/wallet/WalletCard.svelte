@@ -323,7 +323,11 @@
 </ion-modal>
 
 <style>
-	:global(body.dark) .card-front {
+	:global(body.dark) .card-front{
+		background: var(--app-color-primary) !important;
+	}
+
+	:global(body.dark) .card-back{
 		background: var(--app-color-primary) !important;
 	}
 
