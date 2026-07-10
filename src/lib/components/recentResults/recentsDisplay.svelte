@@ -35,7 +35,7 @@
         if (itemDay.getTime() === today.getTime())     return 'today';
         if (itemDay.getTime() === yesterday.getTime()) return 'yesterday';
         if (itemDay >= weekAgo)                        return 'this_week';
-        return Math.random() > 0.5 ? 'today' : 'earlier';
+        return 'earlier';
     }
 
     const PERIOD_ORDER = ['today', 'yesterday', 'this_week', 'earlier'] as const;
