@@ -2,7 +2,7 @@
 	import { averages } from '$lib/functions/gradeAverages/averages';
 	import { neoUniversisGet } from '$lib/dataService';
 	import man from '$lib/assets/man.png';
-	import { settingsOutline, calendarOutline, shield, linkOutline, notificationsCircle, cloudOfflineOutline, barbellOutline, addOutline } from 'ionicons/icons';
+	import { settingsOutline, calendarOutline, shield, linkOutline, notificationsCircle, cloudOfflineOutline, barbellOutline, addOutline, trophyOutline } from 'ionicons/icons';
 	import woman from '$lib/assets/woman.png';
 	import { register } from 'swiper/element/bundle';
 	import { navController } from '$components/shared/StackedNav';
@@ -25,6 +25,7 @@
 	import { locale } from '$lib/i18n';
 	import { StatusBar, Style } from '@capacitor/status-bar';
 	import AdBanner from './ad_banner.svelte';
+	import AchievementPage from '../achievements/achievementPage.svelte';
 
 	// Register the custom AppLauncher plugin
 	const AppLauncherPlugin = registerPlugin('AppLauncherPlugin');
@@ -209,6 +210,11 @@
 					<div class="service-button ion-activatable" on:click={openCapacitorSite} aria-hidden>
 						<ion-icon icon={barbellOutline} class="service-button-icon"></ion-icon>
 						<span class="service-button-label">{$t('homepage.gym')}</span>
+						<ion-ripple-effect></ion-ripple-effect>
+					</div>
+					<div class="service-button ion-activatable" on:click={()=> {navController.push(AchievementPage)}} aria-hidden>
+						<ion-icon icon={trophyOutline} class="service-button-icon"></ion-icon>
+						<span class="service-button-label">Achievements</span>
 						<ion-ripple-effect></ion-ripple-effect>
 					</div>
 				</div>

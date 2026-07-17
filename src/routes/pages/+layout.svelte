@@ -9,6 +9,7 @@
 	import { webmailLoggedIn as webmailAuthenticated} from '$components/webmailLogin/userCredsFlagStore';
 	import { handleChangedPermission } from '$lib/calendarNotifications/exactAlarmPermissionStore';
 	import { t } from '$lib/i18n';
+	import { initializeAchievementEngine } from '$src/lib/globalFunctions/achievementEngine';
 
 
 	// Routes
@@ -50,6 +51,8 @@
 
 		// reschedule calendar notifications if the exact alarm permission changes
 		handleChangedPermission(); 
+
+		initializeAchievementEngine();
 		});
 
 </script>
